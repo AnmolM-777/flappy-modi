@@ -10,5 +10,5 @@ now we have 2 options
 kya karna chahiye??
 Arpit - normal
 Anmol - normal
-Aadi - doesn't matter he gay
+Aadi - normal
 vote karo
