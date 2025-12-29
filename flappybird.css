@@ -1,172 +1,145 @@
 * {
-	box-sizing: border-box;
-	padding: 0;
-	margin: 0;
-	font-family: 'Segoe UI', sans-serif;
-	color: #0c1b33;
+    box-sizing: border-box;
+    padding: 0;
+    margin: 0;
+    font-family: 'Segoe UI', sans-serif;
+    color: #0c1b33;
+    user-select: none; /* Prevents text selection while clicking */
 }
 
 body {
-	background: #ffffff;
-	min-height: 100vh; 
-	display: flex;
-	justify-content: center;
-	align-items: center;
-	padding: 24px;
-}
-
-.page {
-	width: 100%;
-	max-width: 1100px;
-	display: flex;
-	flex-direction: column;
-	gap: 16px;
-	align-items: center;
-	text-align: center;
-}
-
-.header h1 {
-	font-size: 32px;
-	letter-spacing: 1px;
-	margin-bottom: 4px;
-}
-
-.tagline {
-	font-size: 14px;
-	color: #274064;
-}
-
-.game-shell {
-	position: relative;
-	width: 100%;
-	max-width: 960px;
-	border-radius: 0;
-	overflow: hidden;
-	box-shadow: none;
-	background: transparent;
-	margin: 0 auto;
+    background: #4ec0ca; /* Fallback color matching the sky */
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden; /* Disables scrolling */
+    position: relative;
 }
 
 canvas {
-	width: 100%;
-	height: auto;
-	max-height: 670px;
-	aspect-ratio: 3 / 4;
-	display: block;
-	background: transparent;
+    display: block;
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 1;
 }
 
+/* Heads Up Display (Score) */
 .hud {
-	position: absolute;
-	top: 12px;
-	left: 12px;
-	right: 12px;
-	display: flex;
-	justify-content: space-between;
-	gap: 8px;
-	z-index: 2;
-	pointer-events: none;
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    display: flex;
+    gap: 15px;
+    z-index: 10;
+    pointer-events: none;
 }
 
 .badge {
-	background: rgba(255, 255, 255, 0.82);
-	padding: 8px 12px;
-	border-radius: 12px;
-	font-weight: 700;
-	box-shadow: 0 4px 12px rgba(12, 27, 51, 0.12);
+    background: rgba(255, 255, 255, 0.9);
+    padding: 10px 16px;
+    border-radius: 30px;
+    font-weight: 800;
+    font-size: 18px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
 }
 
+/* Full Screen Overlay */
 .overlay {
-	position: absolute;
-	inset: 0;
-	background: linear-gradient(180deg, rgba(12, 27, 51, 0.45), rgba(12, 27, 51, 0.75));
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	z-index: 3;
-	opacity: 0;
-	pointer-events: none;
-	transition: opacity 420ms ease;
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4); /* Darkens the game background slightly */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 20;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+    backdrop-filter: blur(2px);
 }
 
 .overlay.visible {
-	opacity: 1;
-	pointer-events: auto;
+    opacity: 1;
+    pointer-events: auto;
 }
 
+/* The Menu Card */
 .overlay-card {
-	background: #fff;
-	padding: 24px 20px;
-	border-radius: 16px;
-	box-shadow: 0 14px 35px rgba(12, 27, 51, 0.35);
-	width: 80%;
-	max-width: 320px;
-	display: flex;
-	flex-direction: column;
-	gap: 12px;
-	transform: translateY(12px);
-	transition: transform 320ms ease, opacity 320ms ease;
-	opacity: 0;
+    background: #fff;
+    padding: 40px;
+    border-radius: 24px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+    text-align: center;
+    width: 90%;
+    max-width: 400px;
+    animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-.overlay.visible .overlay-card {
-	transform: translateY(0);
-	opacity: 1;
+@keyframes popIn {
+    from { transform: scale(0.8) translateY(20px); opacity: 0; }
+    to { transform: scale(1) translateY(0); opacity: 1; }
 }
 
-.overlay-title {
-	font-size: 22px;
-	font-weight: 800;
+.game-branding h1 {
+    font-size: 36px;
+    margin-bottom: 8px;
+    color: #274064;
+}
+
+.tagline {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 24px;
 }
 
 .overlay-hint {
-	font-size: 14px;
-	color: #274064;
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 20px;
+    color: #333;
 }
 
-.overlay-actions {
-	display: flex;
-	gap: 12px;
-	justify-content: center;
-}
-
+/* Buttons */
 button {
-	border: none;
-	background: #ffb703;
-	color: #0c1b33;
-	font-weight: 800;
-	padding: 12px 16px;
-	border-radius: 10px;
-	cursor: pointer;
-	box-shadow: 0 8px 20px rgba(255, 183, 3, 0.4);
-	transition: transform 150ms ease, box-shadow 150ms ease;
-}
-
-button:hover {
-	transform: translateY(-1px);
-	box-shadow: 0 12px 24px rgba(255, 183, 3, 0.5);
+    border: none;
+    background: #ffb703;
+    color: #0c1b33;
+    font-size: 18px;
+    font-weight: 800;
+    padding: 14px 32px;
+    border-radius: 50px;
+    cursor: pointer;
+    box-shadow: 0 6px 0 #d99a00; /* 3D effect */
+    transition: transform 0.1s;
 }
 
 button:active {
-	transform: translateY(0);
-	box-shadow: 0 6px 12px rgba(255, 183, 3, 0.35);
+    transform: translateY(4px);
+    box-shadow: 0 2px 0 #d99a00;
+}
+
+.pause-btn {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    width: 50px;
+    height: 50px;
+    padding: 0;
+    border-radius: 50%;
+    font-size: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 15;
+    pointer-events: auto;
+}
+
+#pauseOverlay {
+    z-index: 30;
 }
 
 .hidden {
-	display: none;
-}
-
-.footnote {
-	font-size: 12px;
-	color: #274064;
-}
-
-@media (max-width: 520px) {
-	.header h1 {
-		font-size: 26px;
-	}
-
-	.overlay-card {
-		width: 88%;
-	}
+    display: none !important;
 }

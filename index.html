@@ -2,33 +2,48 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Flappy Modi</title>
     <link rel="stylesheet" href="flappybird.css">
 </head>
 <body>
-    <div class="page">
-        <header class="header">
-            <h1>Flappy Modi</h1>
-            <p class="tagline">Tap, click, or hit space to keep Modi flying.</p>
-        </header>
 
-        <div class="game-shell">
-            <div class="hud">
-                <div class="badge">Score: <span id="score">0</span></div>
-                <div class="badge">Best: <span id="best">0</span></div>
+    <div class="hud">
+        <div class="badge">Score: <span id="score">0</span></div>
+        <div class="badge">Best: <span id="best">0</span></div>
+    </div>
+
+    <button id="pauseBtn" class="pause-btn hidden">⏸</button>
+
+    <canvas id="gameCanvas"></canvas>
+
+    <div id="overlay" class="overlay visible">
+        <div class="overlay-card">
+            <div class="game-branding">
+                <h1>Flappy Modi</h1>
+                <p class="tagline">Tap, click, or hit space to keep Modi flying.</p>
             </div>
+            
+            <div class="overlay-content">
+                <p class="overlay-hint" id="overlayHint">Tap, click, or press space to flap.</p>
+                <div class="overlay-actions">
+                    <button id="startBtn" type="button">Start Game</button>
+                    <button id="restartBtn" type="button" class="hidden">Play Again</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-            <canvas id="gameCanvas" width="480" height="640" aria-label="Flappy Modi game area"></canvas>
-
-            <div id="overlay" class="overlay">
-                <div class="overlay-card">
-                    <p class="overlay-title">Flappy Modi</p>
-                    <p class="overlay-hint" id="overlayHint">Tap, click, or press space to flap.</p>
-                    <div class="overlay-actions">
-                        <button id="startBtn" type="button">Start</button>
-                        <button id="restartBtn" type="button" class="hidden">Restart</button>
-                    </div>
+    <div id="pauseOverlay" class="overlay">
+        <div class="overlay-card">
+            <div class="game-branding">
+                <h1>Paused</h1>
+            </div>
+            
+            <div class="overlay-content">
+                <div class="overlay-actions">
+                    <button id="resumeBtn" type="button">Resume</button>
+                    <button id="pauseRestartBtn" type="button">Restart</button>
                 </div>
             </div>
         </div>

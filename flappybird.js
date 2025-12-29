@@ -5,10 +5,22 @@
 	const startBtn = document.getElementById('startBtn');
 	const restartBtn = document.getElementById('restartBtn');
 	const overlay = document.getElementById('overlay');
+	const pauseBtn = document.getElementById('pauseBtn');
+	const pauseOverlay = document.getElementById('pauseOverlay');
+	const resumeBtn = document.getElementById('resumeBtn');
+	const pauseRestartBtn = document.getElementById('pauseRestartBtn');
 	const overlayHint = document.getElementById('overlayHint');
 	const scoreEl = document.getElementById('score');
 	const bestEl = document.getElementById('best');
 	let overlayTimer;
+
+	// Handle full-screen canvas resizing
+	function handleResize() {
+		canvas.width = window.innerWidth;
+		canvas.height = window.innerHeight;
+	}
+	window.addEventListener('resize', handleResize);
+	handleResize(); // Initial size
 
 	// Assets
 	const bgImg = new Image();
@@ -37,13 +49,16 @@
 	let audioPrimed = false;
 
 	// Game state
-	const G = { gravity: 0.315, flap: -7.2, pipeGap: 150, pipeFreq: 1300, pipeSpeed: 2.38 };
+	const G = { gravity: 0.277, flap: -7.2, pipeGap: 150, pipeFreq: 1495, pipeSpeed: 2.737 };
+	let pipeSpacingPx = 420; // will be recalculated on reset based on viewport
 	const PIPE_FACE_MIN = 140; // ensure faces stay visible for both top and bottom
-	const bird = { x: 80, y: canvas.height / 2, r: 22, vel: 0, width: 46, height: 32, hitboxPadding: 6 };
+	const bird = { x: 80, y: 0, r: 22, vel: 0, width: 46, height: 32, hitboxPadding: 6 };
 	let pipes = [];
+	let pipeCount = 0; // Track number of pipes spawned
 	let score = 0;
 	let best = Number(localStorage.getItem('flappy-modi-best') || 0);
 	let running = false;
+	let paused = false;
 	let gameOver = false;
 	let loopId;
 
@@ -51,13 +66,23 @@
 
 	function reset() {
 		pipes = [];
+		pipeCount = 0;
 		bird.y = canvas.height / 2;
 		bird.vel = 0;
 		score = 0;
 		gameOver = false;
+		// Recompute spacing based on current viewport and pipe speed
+		pipeSpacingPx = Math.max(canvas.width * 0.30, 380);
+		G.pipeFreq = (pipeSpacingPx / (G.pipeSpeed * 60)) * 1000; // align spawn time with travel distance
+		// Seed pipes across the screen so they are present immediately
+		const firstX = canvas.width * 0.4;
+		for (let x = firstX; x < canvas.width * 1.8; x += pipeSpacingPx) {
+			spawnPipe(x);
+		}
 		scoreEl.textContent = score;
 		overlayHint.textContent = 'Tap, click, or press space to flap.';
 		restartBtn.classList.add('hidden');
+		startBtn.classList.remove('hidden');
 	}
 
 	function flap() {
@@ -66,11 +91,14 @@
 		try { flapSound.currentTime = 0; flapSound.play(); } catch (e) { /* ignore */ }
 	}
 
-	function spawnPipe() {
+	function spawnPipe(xOverride) {
+		const randomGap = Math.floor(Math.random() * (180 - 130 + 1)) + 130; // Gap between 130-180
 		const minTop = PIPE_FACE_MIN;
-		const maxTop = canvas.height - G.pipeGap - PIPE_FACE_MIN;
+		const maxTop = canvas.height - randomGap - PIPE_FACE_MIN;
 		const topHeight = Math.floor(Math.random() * (maxTop - minTop + 1)) + minTop;
-		pipes.push({ x: canvas.width + 20, top: topHeight, passed: false });
+		const pipeX = typeof xOverride === 'number' ? xOverride : canvas.width + pipeSpacingPx;
+		pipes.push({ x: pipeX, top: topHeight, gap: randomGap, passed: false });
+		pipeCount++;
 	}
 
 	function update(delta) {
@@ -93,7 +121,7 @@
 		// Scoring and collision with hitbox padding
 		for (const p of pipes) {
 			const pipeWidth = 70;
-			const bottomY = p.top + G.pipeGap;
+			const bottomY = p.top + p.gap;
 			
 			// Bird hitbox dimensions
 			const birdLeft = bird.x - bird.width / 2 + bird.hitboxPadding;
@@ -126,18 +154,19 @@
 
 		// Pipes
 		pipes.forEach(p => {
-			const pipeWidth = 70;
+			const pipeWidth = 70; // collision width
+			const drawWidth = 146; // stretched visual width (30% increase)
 			if (pipeTopImg.complete) {
-				ctx.drawImage(pipeTopImg, p.x, p.top - pipeTopImg.height, pipeWidth, pipeTopImg.height);
+				ctx.drawImage(pipeTopImg, p.x, p.top - pipeTopImg.height, drawWidth, pipeTopImg.height);
 			} else {
 				ctx.fillStyle = '#274064';
 				ctx.fillRect(p.x, 0, pipeWidth, p.top);
 			}
 
-			const bottomY = p.top + G.pipeGap;
+			const bottomY = p.top + p.gap;
 			const bottomHeight = canvas.height - bottomY;
 			if (pipeBottomImg.complete) {
-				ctx.drawImage(pipeBottomImg, p.x, bottomY, pipeWidth, pipeBottomImg.height);
+				ctx.drawImage(pipeBottomImg, p.x, bottomY, drawWidth, pipeBottomImg.height);
 			} else {
 				ctx.fillStyle = '#274064';
 				ctx.fillRect(p.x, bottomY, pipeWidth, bottomHeight);
@@ -164,7 +193,7 @@
 	let lastSpawn = 0;
 	let lastTime = 0;
 	function loop(timestamp) {
-		if (!running) return;
+		if (!running || paused) return;
 		const delta = timestamp - lastTime;
 		lastTime = timestamp;
 
@@ -183,9 +212,12 @@
 		clearTimeout(overlayTimer);
 		reset();
 		running = true;
+		paused = false;
 		overlay.classList.remove('visible');
+		pauseBtn.classList.remove('hidden');
+		pauseOverlay.classList.remove('visible');
 		lastTime = performance.now();
-		lastSpawn = lastTime;
+		lastSpawn = lastTime; // spawn cadence handled by seeded pipes + pipeFreq
 		try { bgMusic.currentTime = 0; bgMusic.play(); } catch (e) { /* ignore */ }
 		loopId = requestAnimationFrame(loop);
 	}
@@ -201,9 +233,15 @@
 			localStorage.setItem('flappy-modi-best', best);
 			bestEl.textContent = best;
 		}
-		overlayHint.textContent = `Game over! Score: ${score}`;
+		
+		// Update overlay text for game over
+		document.querySelector('.game-branding h1').textContent = "Game Over!";
+		document.querySelector('.tagline').textContent = `You scored ${score} points`;
+		overlayHint.textContent = '';
+		
 		startBtn.classList.add('hidden');
 		restartBtn.classList.remove('hidden');
+		
 		clearTimeout(overlayTimer);
 		overlayTimer = setTimeout(() => overlay.classList.add('visible'), 400);
 	}
@@ -239,17 +277,47 @@
 			onUserFlap();
 		}
 		if (gameOver && e.code === 'Enter') {
+			document.querySelector('.game-branding h1').textContent = "Flappy Modi";
+			document.querySelector('.tagline').textContent = "Tap, click, or hit space to keep Modi flying.";
 			startGame();
 		}
 	});
 
 	canvas.addEventListener('pointerdown', onUserFlap);
 	startBtn.addEventListener('click', startGame);
-	restartBtn.addEventListener('click', startGame);
+	restartBtn.addEventListener('click', () => {
+		document.querySelector('.game-branding h1').textContent = "Flappy Modi";
+		document.querySelector('.tagline').textContent = "Tap, click, or hit space to keep Modi flying.";
+		startGame();
+	});
+
+	pauseBtn.addEventListener('click', () => {
+		if (!running || gameOver) return;
+		paused = true;
+		pauseOverlay.classList.add('visible');
+		try { bgMusic.pause(); } catch (e) { /* ignore */ }
+	});
+
+	resumeBtn.addEventListener('click', () => {
+		paused = false;
+		pauseOverlay.classList.remove('visible');
+		try { bgMusic.play(); } catch (e) { /* ignore */ }
+		lastTime = performance.now();
+		loopId = requestAnimationFrame(loop);
+	});
+
+	pauseRestartBtn.addEventListener('click', () => {
+		document.querySelector('.game-branding h1').textContent = "Flappy Modi";
+		document.querySelector('.tagline').textContent = "Tap, click, or hit space to keep Modi flying.";
+		startGame();
+	});
+
 	document.addEventListener('pointerdown', primeAudio);
 	document.addEventListener('keydown', primeAudio);
 
-	// Initial draw
+	// Initial setup
+	handleResize();
+	bird.y = canvas.height / 2;
 	draw();
-	overlayTimer = setTimeout(() => overlay.classList.add('visible'), 1000);
+	overlay.classList.add('visible');
 })();
