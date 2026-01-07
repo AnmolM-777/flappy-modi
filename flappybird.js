@@ -226,9 +226,11 @@
         running = false;
         gameOver = true;
         cancelAnimationFrame(loopId);
-
-        try { runningSound.pause(); } catch {}
-
+        
+        try {
+            runningSound.pause();
+            runningSound.currentTime = 0;   // <- important reset
+        } catch {}
         try {
             outSound.currentTime = 0;
             outSound.play();
